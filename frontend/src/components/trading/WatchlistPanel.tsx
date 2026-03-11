@@ -84,7 +84,7 @@ export function WatchlistPanel({ onBuyStock, onOpenSearch, refreshTrigger }: Wat
                     <span>{item.sector}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 flex-shrink-0">
                   <button
                     onClick={() => onBuyStock({ symbol: item.symbol, nseCode: item.nseCode, name: item.name, sector: item.sector, exchange: 'NSE' })}
                     className="p-1.5 rounded-lg bg-gain/10 text-gain hover:bg-gain/20 transition-colors"
