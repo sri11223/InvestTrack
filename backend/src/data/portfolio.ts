@@ -1,11 +1,9 @@
-import { StockHolding } from '../types/index.js';
-
 /**
- * Portfolio holdings master data.
- * This represents the user's portfolio — in a real production app,
- * this would come from a database. For this dashboard, it's static configuration.
+ * @deprecated — Portfolio data is now managed by portfolioStore with JSON persistence.
+ * This file is kept for reference only.
  */
-export const PORTFOLIO_HOLDINGS: StockHolding[] = [
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const PORTFOLIO_HOLDINGS: any[] = [
   // ─── Financials ─────────────────────────────────
   {
     name: 'HDFC Bank Ltd',

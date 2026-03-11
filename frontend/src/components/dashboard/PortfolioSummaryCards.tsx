@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import { TrendingUp, TrendingDown, Wallet, PieChart, Activity } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { PortfolioSummary } from '@/types';
@@ -11,7 +11,7 @@ interface PortfolioSummaryCardsProps {
   portfolio: PortfolioSummary;
 }
 
-export function PortfolioSummaryCards({ portfolio }: PortfolioSummaryCardsProps) {
+export const PortfolioSummaryCards = memo(function PortfolioSummaryCards({ portfolio }: PortfolioSummaryCardsProps) {
   const {
     totalInvestment,
     totalPresentValue,
@@ -91,4 +91,4 @@ export function PortfolioSummaryCards({ portfolio }: PortfolioSummaryCardsProps)
       ))}
     </div>
   );
-}
+});

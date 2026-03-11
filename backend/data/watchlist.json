@@ -1,0 +1,18 @@
+[
+  {
+    "nseCode": "TCS",
+    "symbol": "TCS.NS",
+    "name": "Tata Consultancy Services",
+    "sector": "Technology",
+    "id": "93515cd4-2064-4eb6-b484-a9579fd8660c",
+    "addedAt": "2026-03-11T07:31:41.663Z"
+  },
+  {
+    "nseCode": "HDFCBANK",
+    "symbol": "HDFCBANK.NS",
+    "name": "HDFC Bank Ltd",
+    "sector": "Financials",
+    "id": "d16f0138-dda3-4453-a89f-ae9404bf3fd1",
+    "addedAt": "2026-03-11T07:32:56.556Z"
+  }
+]

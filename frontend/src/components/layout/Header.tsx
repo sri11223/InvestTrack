@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { BarChart3, RefreshCw } from 'lucide-react';
+import { BarChart3, RefreshCw, Search, Plus } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Spinner } from '@/components/ui/Spinner';
 import { formatTime } from '@/utils/formatters';
@@ -12,6 +12,7 @@ interface HeaderProps {
   autoRefresh: boolean;
   onToggleAutoRefresh: (enabled: boolean) => void;
   onManualRefresh: () => void;
+  onOpenSearch?: () => void;
 }
 
 export function Header({
@@ -20,6 +21,7 @@ export function Header({
   autoRefresh,
   onToggleAutoRefresh,
   onManualRefresh,
+  onOpenSearch,
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 bg-[var(--bg-primary)]/80 backdrop-blur-xl border-b border-[var(--border)]">
@@ -42,6 +44,25 @@ export function Header({
 
           {/* Status & Controls */}
           <div className="flex items-center gap-3">
+            {/* Search / Add Stock */}
+            {onOpenSearch && (
+              <button
+                onClick={onOpenSearch}
+                className="
+                  flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                  bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90
+                  transition-all duration-200 shadow-lg shadow-[var(--accent)]/25
+                "
+              >
+                <Search className="w-3 h-3" />
+                <span className="hidden sm:inline">Search</span>
+                <Plus className="w-3 h-3" />
+                <kbd className="hidden sm:inline ml-1 px-1 py-0.5 text-[9px] font-mono rounded bg-white/20">
+                  ⌘K
+                </kbd>
+              </button>
+            )}
+
             {/* Live indicator */}
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)]">
               {isRefreshing ? (

@@ -1,20 +1,23 @@
 // ─── Stock & Portfolio Types ─────────────────────────────────────────────────
 
 export interface StockHolding {
+  id: string;            // Unique ID for this holding
   name: string;
-  symbol: string;       // Yahoo Finance symbol (e.g., "HDFCBANK.NS")
+  symbol: string;        // e.g., "HDFCBANK.NS"
   nseCode: string;
   bseCode: string;
   sector: string;
   purchasePrice: number;
   quantity: number;
+  purchaseDate: string;  // ISO date string
+  notes?: string;
 }
 
 export interface StockQuote {
   symbol: string;
-  cmp: number;          // Current Market Price
-  change: number;       // Absolute change
-  changePercent: number; // Percentage change
+  cmp: number;
+  change: number;
+  changePercent: number;
   dayHigh: number;
   dayLow: number;
   volume: number;
@@ -23,6 +26,9 @@ export interface StockQuote {
 
 export interface StockFundamentals {
   symbol: string;
+  cmp: number | null;
+  change: number | null;
+  changePercent: number | null;
   peRatio: number | null;
   latestEarnings: string | null;
   marketCap: string | null;
@@ -33,11 +39,11 @@ export interface StockFundamentals {
 
 export interface PortfolioStock extends StockHolding {
   cmp: number;
-  investment: number;      // purchasePrice * quantity
-  presentValue: number;    // cmp * quantity
-  gainLoss: number;        // presentValue - investment
+  investment: number;
+  presentValue: number;
+  gainLoss: number;
   gainLossPercent: number;
-  portfolioWeight: number; // percentage of total portfolio
+  portfolioWeight: number;
   peRatio: number | null;
   latestEarnings: string | null;
   dayChange: number;
@@ -60,6 +66,89 @@ export interface PortfolioSummary {
   totalGainLoss: number;
   totalGainLossPercent: number;
   sectors: SectorSummary[];
+  lastUpdated: string;
+}
+
+// ─── Trade Types ────────────────────────────────────────────────────────────
+
+export type TradeAction = 'BUY' | 'SELL';
+
+export interface Trade {
+  id: string;
+  holdingId: string;
+  symbol: string;
+  nseCode: string;
+  name: string;
+  action: TradeAction;
+  price: number;
+  quantity: number;
+  totalValue: number;
+  date: string;
+  notes?: string;
+}
+
+export interface TradeRequest {
+  symbol: string;
+  nseCode: string;
+  name: string;
+  sector: string;
+  bseCode: string;
+  action: TradeAction;
+  price: number;
+  quantity: number;
+  notes?: string;
+}
+
+export interface TradeCalculation {
+  buyPrice: number;
+  sellPrice: number;
+  quantity: number;
+  investment: number;
+  returns: number;
+  profit: number;
+  profitPercent: number;
+  breakEvenPrice: number;
+}
+
+// ─── Search Types ───────────────────────────────────────────────────────────
+
+export interface StockSearchResult {
+  symbol: string;
+  nseCode: string;
+  name: string;
+  sector: string;
+  exchange: string;
+  cmp?: number | null;
+}
+
+// ─── Watchlist Types ────────────────────────────────────────────────────────
+
+export interface WatchlistItem {
+  id: string;
+  nseCode: string;
+  symbol: string;
+  name: string;
+  sector: string;
+  addedAt: string;
+  targetPrice?: number;
+  notes?: string;
+}
+
+// ─── Chart Types ────────────────────────────────────────────────────────────
+
+export interface CandlestickData {
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export interface ChartDataResponse {
+  symbol: string;
+  period: string;
+  data: CandlestickData[];
   lastUpdated: string;
 }
 

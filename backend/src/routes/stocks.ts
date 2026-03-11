@@ -1,6 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { PORTFOLIO_HOLDINGS } from '../data/portfolio.js';
-import { getStockQuote, getBatchQuotes } from '../services/yahooFinance.js';
+import { portfolioStore } from '../services/portfolioStore.js';
 import { getStockFundamentals, getBatchFundamentals } from '../services/googleFinance.js';
 import { cacheService } from '../services/cache.js';
 import { PortfolioStock, SectorSummary, PortfolioSummary, ApiResponse } from '../types/index.js';
@@ -11,7 +10,7 @@ const router = Router();
 
 /**
  * GET /api/stocks/quote/:symbol
- * Fetch real-time quote for a single stock
+ * Fetch real-time quote for a single stock (via Google Finance)
  */
 router.get('/quote/:symbol', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -21,7 +20,21 @@ router.get('/quote/:symbol', async (req: Request, res: Response, next: NextFunct
       throw new AppError('Symbol parameter is required', 400, 'INVALID_SYMBOL');
     }
 
-    const quote = await getStockQuote(symbol);
+    // Use nseCode format — strip ".NS" suffix if present
+    const nseCode = symbol.replace(/\.NS$/i, '');
+    const fundamentals = await getStockFundamentals(nseCode);
+
+    const quote = {
+      symbol,
+      cmp: fundamentals.cmp ?? 0,
+      change: fundamentals.change ?? 0,
+      changePercent: fundamentals.changePercent ?? 0,
+      dayHigh: 0,
+      dayLow: 0,
+      volume: 0,
+      lastUpdated: fundamentals.lastUpdated,
+    };
+
     const response: ApiResponse<typeof quote> = {
       success: true,
       data: quote,
@@ -66,27 +79,23 @@ router.get('/fundamentals/:nseCode', async (req: Request, res: Response, next: N
  */
 router.get('/portfolio', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const symbols = PORTFOLIO_HOLDINGS.map((h) => h.symbol);
-    const nseCodes = PORTFOLIO_HOLDINGS.map((h) => h.nseCode);
+    const holdings = portfolioStore.getHoldings();
+    const nseCodes = holdings.map((h) => h.nseCode);
 
-    // Fetch quotes and fundamentals in parallel
-    const [quotesMap, fundamentalsMap] = await Promise.all([
-      getBatchQuotes(symbols),
-      getBatchFundamentals(nseCodes),
-    ]);
+    // Fetch all data from Google Finance (CMP + fundamentals in one scrape)
+    const fundamentalsMap = await getBatchFundamentals(nseCodes);
 
     // Calculate total investment for portfolio weight calculation
-    const totalInvestment = PORTFOLIO_HOLDINGS.reduce(
+    const totalInvestment = holdings.reduce(
       (sum, h) => sum + h.purchasePrice * h.quantity,
       0
     );
 
     // Build enriched portfolio stocks
-    const portfolioStocks: PortfolioStock[] = PORTFOLIO_HOLDINGS.map((holding) => {
-      const quote = quotesMap.get(holding.symbol);
+    const portfolioStocks: PortfolioStock[] = holdings.map((holding) => {
       const fundamentals = fundamentalsMap.get(holding.nseCode);
 
-      const cmp = quote?.cmp ?? 0;
+      const cmp = fundamentals?.cmp ?? 0;
       const investment = holding.purchasePrice * holding.quantity;
       const presentValue = cmp * holding.quantity;
       const gainLoss = presentValue - investment;
@@ -103,8 +112,8 @@ router.get('/portfolio', async (req: Request, res: Response, next: NextFunction)
         portfolioWeight,
         peRatio: fundamentals?.peRatio ?? null,
         latestEarnings: fundamentals?.latestEarnings ?? null,
-        dayChange: quote?.change ?? 0,
-        dayChangePercent: quote?.changePercent ?? 0,
+        dayChange: fundamentals?.change ?? 0,
+        dayChangePercent: fundamentals?.changePercent ?? 0,
       };
     });
 
@@ -162,12 +171,13 @@ router.get('/portfolio', async (req: Request, res: Response, next: NextFunction)
 
 /**
  * GET /api/stocks/holdings
- * Returns the static portfolio holdings data (no live prices)
+ * Returns the current portfolio holdings data (no live prices)
  */
 router.get('/holdings', (_req: Request, res: Response) => {
-  const response: ApiResponse<typeof PORTFOLIO_HOLDINGS> = {
+  const holdings = portfolioStore.getHoldings();
+  const response: ApiResponse<typeof holdings> = {
     success: true,
-    data: PORTFOLIO_HOLDINGS,
+    data: holdings,
     timestamp: new Date().toISOString(),
   };
 

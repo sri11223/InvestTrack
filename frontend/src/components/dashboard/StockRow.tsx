@@ -1,23 +1,46 @@
 'use client';
 
 import React, { memo } from 'react';
-import { TrendingUp, TrendingDown } from 'lucide-react';
-import { PortfolioStock } from '@/types';
+import { TrendingUp, TrendingDown, ShoppingCart, ArrowDownCircle, Trash2 } from 'lucide-react';
+import { PortfolioStock, StockSearchResult } from '@/types';
 import { formatCurrency, formatNumber, formatPercent } from '@/utils/formatters';
 import { isGain } from '@/utils/calculations';
 
 interface StockRowProps {
   stock: PortfolioStock;
   index: number;
+  onBuy?: (stock: StockSearchResult) => void;
+  onSell?: (stock: StockSearchResult, currentHolding: { quantity: number; purchasePrice: number }) => void;
+  onRemove?: (id: string) => void;
 }
 
 /**
  * A single stock row in the portfolio table.
  * Memoized to prevent unnecessary re-renders when other stocks update.
  */
-export const StockRow = memo(function StockRow({ stock, index }: StockRowProps) {
+export const StockRow = memo(function StockRow({ stock, index, onBuy, onSell, onRemove }: StockRowProps) {
   const gain = isGain(stock.gainLoss);
   const dayGain = isGain(stock.dayChange);
+
+  // Dynamic hold/buy/sell recommendation based on P&L
+  const recommendation = (() => {
+    if (stock.cmp <= 0) return null;
+    const pct = stock.gainLossPercent;
+    if (pct <= -10) return { label: 'Avg Down', color: 'bg-blue-500/15 text-blue-400' };
+    if (pct < 0) return { label: 'Hold', color: 'bg-yellow-500/15 text-yellow-400' };
+    if (pct >= 30) return { label: 'Book Profit', color: 'bg-gain/15 text-gain' };
+    if (pct >= 15) return { label: 'Trail SL', color: 'bg-[var(--accent)]/15 text-[var(--accent)]' };
+    return { label: 'Hold', color: 'bg-yellow-500/15 text-yellow-400' };
+  })();
+
+  const asSearchResult: StockSearchResult = {
+    symbol: stock.symbol,
+    nseCode: stock.nseCode,
+    name: stock.name,
+    sector: stock.sector,
+    exchange: 'NSE',
+    cmp: stock.cmp,
+  };
 
   return (
     <tr className="table-row text-sm">
@@ -29,9 +52,16 @@ export const StockRow = memo(function StockRow({ stock, index }: StockRowProps) 
       {/* Stock Name */}
       <td className="px-3 py-3">
         <div>
-          <p className="font-medium text-[var(--text-primary)] truncate max-w-[180px]">
-            {stock.name}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-[var(--text-primary)] truncate max-w-[180px]">
+              {stock.name}
+            </p>
+            {recommendation && (
+              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap ${recommendation.color}`}>
+                {recommendation.label}
+              </span>
+            )}
+          </div>
           <p className="text-xs text-[var(--text-muted)] mt-0.5">
             {stock.nseCode}
           </p>
@@ -117,9 +147,31 @@ export const StockRow = memo(function StockRow({ stock, index }: StockRowProps) 
         {stock.peRatio !== null ? formatNumber(stock.peRatio, 1) : '—'}
       </td>
 
-      {/* Latest Earnings */}
-      <td className="px-3 py-3 text-center text-xs text-[var(--text-secondary)]">
-        {stock.latestEarnings || '—'}
+      {/* Actions */}
+      <td className="px-3 py-3">
+        <div className="flex items-center justify-center gap-1">
+          <button
+            onClick={() => onBuy?.(asSearchResult)}
+            className="p-1.5 rounded-lg bg-gain/10 text-gain hover:bg-gain/20 transition-colors"
+            title="Buy more"
+          >
+            <ShoppingCart className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => onSell?.(asSearchResult, { quantity: stock.quantity, purchasePrice: stock.purchasePrice })}
+            className="p-1.5 rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20 transition-colors"
+            title="Sell"
+          >
+            <ArrowDownCircle className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => onRemove?.(stock.id)}
+            className="p-1.5 rounded-lg bg-loss/10 text-loss hover:bg-loss/20 transition-colors"
+            title="Remove"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </td>
     </tr>
   );

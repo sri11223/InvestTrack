@@ -1,0 +1,26 @@
+[
+  {
+    "id": "a19e1bd8-a5b4-4f37-bf2e-dba0ad85d9ff",
+    "holdingId": "b0a29c7c-c628-4899-80f6-d4ad1452316a",
+    "symbol": "TCS.NS",
+    "nseCode": "TCS",
+    "name": "Tata Consultancy Services",
+    "action": "BUY",
+    "price": 2485.7,
+    "quantity": 12,
+    "totalValue": 29828.399999999998,
+    "date": "2026-03-11T07:32:01.516Z"
+  },
+  {
+    "id": "8caf0c54-1656-467e-8ce8-3adc95bb8bef",
+    "holdingId": "d3a9f729-dff9-4cd2-8b75-5abcbe01f450",
+    "symbol": "HDFCBANK.NS",
+    "nseCode": "HDFCBANK",
+    "name": "HDFC Bank Ltd",
+    "action": "SELL",
+    "price": 828.2,
+    "quantity": 50,
+    "totalValue": 41410,
+    "date": "2026-03-11T07:32:33.510Z"
+  }
+]

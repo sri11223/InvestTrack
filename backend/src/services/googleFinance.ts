@@ -55,6 +55,9 @@ export async function getStockFundamentals(
     // Return partial data instead of failing completely
     const fallback: StockFundamentals = {
       symbol: nseCode,
+      cmp: null,
+      change: null,
+      changePercent: null,
       peRatio: null,
       latestEarnings: null,
       marketCap: null,
@@ -77,11 +80,48 @@ function parseGoogleFinancePage(
   $: cheerio.CheerioAPI,
   symbol: string
 ): StockFundamentals {
+  let cmp: number | null = null;
+  let change: number | null = null;
+  let changePercent: number | null = null;
   let peRatio: number | null = null;
   let latestEarnings: string | null = null;
   let marketCap: string | null = null;
   let weekHigh52: number | null = null;
   let weekLow52: number | null = null;
+
+  // ─── Extract CMP (Current Market Price) ─────────────────────
+  // Most reliable: data-last-price attribute
+  const lastPriceAttr = $('[data-last-price]').first().attr('data-last-price');
+  if (lastPriceAttr) {
+    const parsed = parseFloat(lastPriceAttr);
+    if (!isNaN(parsed)) cmp = parsed;
+  }
+
+  // Fallback: the main price display element
+  if (cmp === null) {
+    const priceEl = $('div.YMlKec.fxKbKc').first();
+    if (priceEl.length) {
+      const priceText = priceEl.text().trim().replace(/[₹,\s]/g, '');
+      const parsed = parseFloat(priceText);
+      if (!isNaN(parsed)) cmp = parsed;
+    }
+  }
+
+  // ─── Extract Price Change Percent ──────────────────────────
+  // Google Finance shows change% in span.JwB6zf (e.g. "-0.98%")
+  const changeElements = $('span.JwB6zf, div.JwB6zf');
+  if (changeElements.length) {
+    const changeText = changeElements.first().text().trim();
+    const cleanPct = changeText.replace(/[()%,\s₹]/g, '').replace(/[−–—]/g, '-');
+    const parsedPct = parseFloat(cleanPct);
+    if (!isNaN(parsedPct)) {
+      changePercent = parsedPct;
+      // Calculate absolute change from CMP and percentage
+      if (cmp !== null && cmp > 0) {
+        change = (cmp * changePercent) / (100 + changePercent);
+      }
+    }
+  }
 
   // Google Finance displays fundamentals in a description list / table format
   // The labels and values are in adjacent elements
@@ -126,6 +166,9 @@ function parseGoogleFinancePage(
   }
 
   logger.debug(`Parsed fundamentals for ${symbol}`, {
+    cmp,
+    change,
+    changePercent,
     peRatio,
     latestEarnings,
     marketCap,
@@ -133,6 +176,9 @@ function parseGoogleFinancePage(
 
   return {
     symbol,
+    cmp,
+    change,
+    changePercent,
     peRatio,
     latestEarnings,
     marketCap,

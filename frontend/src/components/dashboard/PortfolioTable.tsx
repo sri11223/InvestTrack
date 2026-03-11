@@ -2,11 +2,14 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/Card';
-import { PortfolioSummary } from '@/types';
+import { PortfolioSummary, StockSearchResult } from '@/types';
 import { SectorGroup } from './SectorGroup';
 
 interface PortfolioTableProps {
   portfolio: PortfolioSummary;
+  onBuy?: (stock: StockSearchResult) => void;
+  onSell?: (stock: StockSearchResult, currentHolding: { quantity: number; purchasePrice: number }) => void;
+  onRemove?: (id: string) => void;
 }
 
 const TABLE_HEADERS = [
@@ -21,10 +24,10 @@ const TABLE_HEADERS = [
   { key: 'presentValue', label: 'Present Value', align: 'right' as const, width: 'w-32' },
   { key: 'gainLoss', label: 'Gain/Loss', align: 'right' as const, width: 'w-36' },
   { key: 'pe', label: 'P/E Ratio', align: 'center' as const, width: 'w-24' },
-  { key: 'earnings', label: 'Latest Earnings', align: 'center' as const, width: 'w-28' },
+  { key: 'actions', label: 'Actions', align: 'center' as const, width: 'w-28' },
 ];
 
-export function PortfolioTable({ portfolio }: PortfolioTableProps) {
+export function PortfolioTable({ portfolio, onBuy, onSell, onRemove }: PortfolioTableProps) {
   let runningIndex = 0;
 
   return (
@@ -74,6 +77,9 @@ export function PortfolioTable({ portfolio }: PortfolioTableProps) {
                   key={sector.sector}
                   sector={sector}
                   startIndex={startIndex}
+                  onBuy={onBuy}
+                  onSell={onSell}
+                  onRemove={onRemove}
                 />
               );
             })}

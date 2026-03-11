@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import stocksRouter from './stocks.js';
+import tradesRouter from './trades.js';
 
 const router = Router();
 
@@ -15,5 +16,8 @@ router.get('/health', (_req: Request, res: Response) => {
 
 // Mount stock routes
 router.use('/stocks', stocksRouter);
+
+// Mount trade routes (buy/sell, search, watchlist, calculator)
+router.use('/trades', tradesRouter);
 
 export default router;

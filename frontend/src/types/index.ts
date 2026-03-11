@@ -1,6 +1,7 @@
 // ─── Stock & Portfolio Types (Frontend) ──────────────────────────────────────
 
 export interface StockHolding {
+  id: string;
   name: string;
   symbol: string;
   nseCode: string;
@@ -8,6 +9,7 @@ export interface StockHolding {
   sector: string;
   purchasePrice: number;
   quantity: number;
+  purchaseDate: string;
 }
 
 export interface PortfolioStock extends StockHolding {
@@ -40,6 +42,71 @@ export interface PortfolioSummary {
   totalGainLossPercent: number;
   sectors: SectorSummary[];
   lastUpdated: string;
+}
+
+// ─── Trade Types ────────────────────────────────────────────────────────────
+
+export type TradeAction = 'BUY' | 'SELL';
+
+export interface Trade {
+  id: string;
+  holdingId: string;
+  symbol: string;
+  nseCode: string;
+  name: string;
+  action: TradeAction;
+  price: number;
+  quantity: number;
+  totalValue: number;
+  date: string;
+  notes?: string;
+}
+
+export interface TradeRequest {
+  symbol?: string;
+  nseCode: string;
+  name: string;
+  sector: string;
+  bseCode?: string;
+  action: TradeAction;
+  price: number;
+  quantity: number;
+  notes?: string;
+}
+
+export interface TradeCalculation {
+  buyPrice: number;
+  sellPrice: number;
+  quantity: number;
+  investment: number;
+  returns: number;
+  profit: number;
+  profitPercent: number;
+  breakEvenPrice: number;
+}
+
+// ─── Search Types ───────────────────────────────────────────────────────────
+
+export interface StockSearchResult {
+  symbol: string;
+  nseCode: string;
+  name: string;
+  sector: string;
+  exchange: string;
+  cmp?: number | null;
+}
+
+// ─── Watchlist Types ────────────────────────────────────────────────────────
+
+export interface WatchlistItem {
+  id: string;
+  nseCode: string;
+  symbol: string;
+  name: string;
+  sector: string;
+  addedAt: string;
+  targetPrice?: number;
+  notes?: string;
 }
 
 // ─── API Response Types ─────────────────────────────────────────────────────

@@ -2,7 +2,7 @@
 
 import React, { useState, memo } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { SectorSummary } from '@/types';
+import { SectorSummary, StockSearchResult } from '@/types';
 import { StockRow } from './StockRow';
 import { formatCurrency, formatPercent } from '@/utils/formatters';
 import { isGain } from '@/utils/calculations';
@@ -11,13 +11,16 @@ import { SECTOR_COLORS } from '@/constants';
 interface SectorGroupProps {
   sector: SectorSummary;
   startIndex: number;
+  onBuy?: (stock: StockSearchResult) => void;
+  onSell?: (stock: StockSearchResult, currentHolding: { quantity: number; purchasePrice: number }) => void;
+  onRemove?: (id: string) => void;
 }
 
 /**
  * Collapsible sector group with summary row and individual stock rows.
  * Default expanded for better UX.
  */
-export const SectorGroup = memo(function SectorGroup({ sector, startIndex }: SectorGroupProps) {
+export const SectorGroup = memo(function SectorGroup({ sector, startIndex, onBuy, onSell, onRemove }: SectorGroupProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const gain = isGain(sector.gainLoss);
   const sectorColor = SECTOR_COLORS[sector.sector] || '#6b7280';
@@ -87,6 +90,9 @@ export const SectorGroup = memo(function SectorGroup({ sector, startIndex }: Sec
             key={stock.symbol}
             stock={stock}
             index={startIndex + idx}
+            onBuy={onBuy}
+            onSell={onSell}
+            onRemove={onRemove}
           />
         ))}
     </>
