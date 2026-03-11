@@ -1,5 +1,6 @@
 import YahooFinance from 'yahoo-finance2';
-import { StockQuote } from '../types/index.js';
+import axios from 'axios';
+import { StockQuote, CandlestickData } from '../types/index.js';
 import { cacheService } from './cache.js';
 import { config } from '../config/index.js';
 import { logger } from '../utils/logger.js';
@@ -93,4 +94,79 @@ export async function getBatchQuotes(
   }
 
   return results;
+}
+
+/**
+ * Fetches historical OHLCV data using Yahoo Finance's public chart web API.
+ * The yahoo-finance2 library (v2) doesn't support historical/chart,
+ * so we call the Yahoo Finance chart endpoint directly via HTTP.
+ * Cached for 15 minutes.
+ */
+export async function getHistoricalData(
+  symbol: string,
+  period: string
+): Promise<CandlestickData[]> {
+  const cacheKey = `chart:${symbol}:${period}`;
+  const cached = cacheService.get<CandlestickData[]>(cacheKey);
+  if (cached) return cached;
+
+  const rangeMap: Record<string, string> = {
+    '1W': '5d', '1M': '1mo', '3M': '3mo', '6M': '6mo', '1Y': '1y',
+  };
+  const intervalMap: Record<string, string> = {
+    '1W': '1d', '1M': '1d', '3M': '1d', '6M': '1wk', '1Y': '1wk',
+  };
+
+  const range = rangeMap[period] || '1mo';
+  const interval = intervalMap[period] || '1d';
+
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`;
+    const response = await axios.get(url, {
+      params: { range, interval, includePrePost: false },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      },
+      timeout: 15000,
+    });
+
+    const chartResult = response.data?.chart?.result?.[0];
+    if (!chartResult || !chartResult.timestamp) {
+      throw new AppError(`No historical data for ${symbol}`, 404, 'CHART_NOT_FOUND');
+    }
+
+    const timestamps: number[] = chartResult.timestamp;
+    const quotes = chartResult.indicators?.quote?.[0];
+    if (!quotes) {
+      throw new AppError(`No quote data in chart for ${symbol}`, 404, 'CHART_NO_QUOTES');
+    }
+
+    const data: CandlestickData[] = [];
+    for (let i = 0; i < timestamps.length; i++) {
+      const close = quotes.close?.[i];
+      if (close == null) continue;
+
+      data.push({
+        date: new Date(timestamps[i] * 1000).toISOString().split('T')[0],
+        open: parseFloat((quotes.open?.[i] ?? close).toFixed(2)),
+        high: parseFloat((quotes.high?.[i] ?? close).toFixed(2)),
+        low: parseFloat((quotes.low?.[i] ?? close).toFixed(2)),
+        close: parseFloat(close.toFixed(2)),
+        volume: quotes.volume?.[i] ?? 0,
+      });
+    }
+
+    // Cache for 15 minutes
+    cacheService.set(cacheKey, data, 900);
+    return data;
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    logger.error(`Failed to fetch historical data for ${symbol}`, { error: message });
+    throw new AppError(
+      `Failed to fetch chart data for ${symbol}: ${message}`,
+      502,
+      'YAHOO_CHART_ERROR'
+    );
+  }
 }

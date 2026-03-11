@@ -76,6 +76,7 @@ export default function DashboardPage() {
   const [tradeAction, setTradeAction] = useState<TradeAction>('BUY');
   const [tradeHolding, setTradeHolding] = useState<{ quantity: number; purchasePrice: number } | undefined>();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [chartStock, setChartStock] = useState<string>('');  // nseCode for chart
 
   const triggerRefresh = useCallback(() => {
     setRefreshTrigger((n) => n + 1);
@@ -99,6 +100,13 @@ export default function DashboardPage() {
   const stockCodes = useMemo(() => {
     return allStocks.map((s) => ({ nseCode: s.nseCode, name: s.name }));
   }, [allStocks]);
+
+  // Default chart stock to the first holding
+  useEffect(() => {
+    if (allStocks.length > 0 && !chartStock) {
+      setChartStock(allStocks[0].nseCode);
+    }
+  }, [allStocks, chartStock]);
 
   // ── Keyboard shortcut: Ctrl+K / Cmd+K → open search ──────
   useEffect(() => {
@@ -242,10 +250,23 @@ export default function DashboardPage() {
                 {widgets.filter((w) => ['chart', 'sector', 'analytics', 'compare'].includes(w.id) && w.visible).map((w) => {
                   if (w.id === 'chart') return renderWidget('chart',
                     <Card>
-                      <CardHeader><h3 className="font-semibold text-[var(--text-primary)]">Portfolio Trend</h3></CardHeader>
+                      <CardHeader>
+                        <div className="flex items-center justify-between w-full">
+                          <h3 className="font-semibold text-[var(--text-primary)]">Stock Chart</h3>
+                          <select
+                            value={chartStock}
+                            onChange={(e) => setChartStock(e.target.value)}
+                            className="text-xs rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                          >
+                            {allStocks.map((s) => (
+                              <option key={s.nseCode} value={s.nseCode}>{s.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </CardHeader>
                       <CardBody>
                         <Suspense fallback={<WidgetSpinner />}>
-                          <StockChart symbol="Portfolio" data={[]} height={280} />
+                          {chartStock && <StockChart symbol={chartStock} nseCode={chartStock} height={280} />}
                         </Suspense>
                       </CardBody>
                     </Card>

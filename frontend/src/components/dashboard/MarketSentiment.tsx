@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useMemo, memo } from 'react';
-import { Activity } from 'lucide-react';
-import { PortfolioSummary, PortfolioStock } from '@/types';
+import { PortfolioSummary } from '@/types';
 
 interface MarketSentimentProps {
   portfolio: PortfolioSummary;

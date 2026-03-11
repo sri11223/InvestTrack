@@ -2,7 +2,7 @@
 
 import React, { useMemo, memo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { PortfolioSummary, PortfolioStock } from '@/types';
+import { PortfolioSummary } from '@/types';
 import { formatCurrency, formatPercent } from '@/utils/formatters';
 import { SECTOR_COLORS } from '@/constants';
 

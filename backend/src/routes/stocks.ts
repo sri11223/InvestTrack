@@ -1,9 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { portfolioStore } from '../services/portfolioStore.js';
 import { getStockFundamentals, getBatchFundamentals } from '../services/googleFinance.js';
-import { getBatchQuotes } from '../services/yahooFinance.js';
+import { getBatchQuotes, getHistoricalData } from '../services/yahooFinance.js';
 import { cacheService } from '../services/cache.js';
-import { PortfolioStock, SectorSummary, PortfolioSummary, ApiResponse } from '../types/index.js';
+import { PortfolioStock, SectorSummary, PortfolioSummary, ApiResponse, ChartDataResponse } from '../types/index.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { logger } from '../utils/logger.js';
 
@@ -216,6 +216,47 @@ router.get('/cache-stats', (_req: Request, res: Response) => {
   };
 
   res.json(response);
+});
+
+/**
+ * GET /api/stocks/chart/:symbol?period=1M
+ * Fetch historical OHLCV data from Yahoo Finance for charting.
+ * Supported periods: 1W, 1M, 3M, 6M, 1Y
+ */
+router.get('/chart/:symbol', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { symbol } = req.params;
+    const period = (req.query.period as string) || '1M';
+
+    if (!symbol || typeof symbol !== 'string') {
+      throw new AppError('Symbol parameter is required', 400, 'INVALID_SYMBOL');
+    }
+
+    const validPeriods = ['1W', '1M', '3M', '6M', '1Y'];
+    if (!validPeriods.includes(period)) {
+      throw new AppError(`Invalid period. Use one of: ${validPeriods.join(', ')}`, 400, 'INVALID_PERIOD');
+    }
+
+    const yahooSymbol = symbol.endsWith('.NS') ? symbol : `${symbol}.NS`;
+    const data = await getHistoricalData(yahooSymbol, period);
+
+    const chartResponse: ChartDataResponse = {
+      symbol,
+      period,
+      data,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    const response: ApiResponse<ChartDataResponse> = {
+      success: true,
+      data: chartResponse,
+      timestamp: new Date().toISOString(),
+    };
+
+    res.json(response);
+  } catch (error) {
+    next(error);
+  }
 });
 
 export default router;

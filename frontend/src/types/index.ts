@@ -140,3 +140,21 @@ export interface SortConfig {
 }
 
 export type DataStatus = 'idle' | 'loading' | 'success' | 'error';
+
+// ─── Chart Types ────────────────────────────────────────────────────────────
+
+export interface CandlestickData {
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export interface ChartDataResponse {
+  symbol: string;
+  period: string;
+  data: CandlestickData[];
+  lastUpdated: string;
+}

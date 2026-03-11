@@ -8,6 +8,7 @@ import {
   TradeRequest,
   TradeCalculation,
   WatchlistItem,
+  ChartDataResponse,
 } from '@/types';
 
 // ─── Portfolio ──────────────────────────────────────────────────────────────
@@ -86,4 +87,13 @@ export async function addToWatchlist(item: Omit<WatchlistItem, 'id' | 'addedAt'>
 
 export async function removeFromWatchlist(id: string): Promise<void> {
   await apiClient.delete(`/trades/watchlist/${encodeURIComponent(id)}`);
+}
+
+// ─── Charts ─────────────────────────────────────────────────────────────────
+
+export async function fetchChartData(symbol: string, period: string = '1M'): Promise<ChartDataResponse> {
+  const response = await apiClient.get<ApiResponse<ChartDataResponse>>(`/stocks/chart/${encodeURIComponent(symbol)}`, {
+    params: { period },
+  });
+  return response.data.data;
 }
