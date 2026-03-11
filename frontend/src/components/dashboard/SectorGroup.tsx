@@ -32,7 +32,7 @@ export const SectorGroup = memo(function SectorGroup({ sector, startIndex, onBuy
         className="cursor-pointer select-none group"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <td colSpan={12} className="px-0 py-0">
+        <td colSpan={13} className="px-0 py-0">
           <div className="flex items-center justify-between px-4 py-3 bg-[var(--bg-secondary)] hover:bg-[var(--bg-card-hover)] transition-colors duration-150 border-y border-[var(--border)]">
             {/* Left: Sector name */}
             <div className="flex items-center gap-3">

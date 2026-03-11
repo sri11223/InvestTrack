@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { portfolioStore } from '../services/portfolioStore.js';
 import { getStockFundamentals, getBatchFundamentals } from '../services/googleFinance.js';
+import { getBatchQuotes } from '../services/yahooFinance.js';
 import { cacheService } from '../services/cache.js';
 import { PortfolioStock, SectorSummary, PortfolioSummary, ApiResponse } from '../types/index.js';
 import { AppError } from '../middleware/errorHandler.js';
@@ -10,7 +11,7 @@ const router = Router();
 
 /**
  * GET /api/stocks/quote/:symbol
- * Fetch real-time quote for a single stock (via Google Finance)
+ * Fetch real-time quote for a single stock (Yahoo Finance primary, Google fallback)
  */
 router.get('/quote/:symbol', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -20,20 +21,28 @@ router.get('/quote/:symbol', async (req: Request, res: Response, next: NextFunct
       throw new AppError('Symbol parameter is required', 400, 'INVALID_SYMBOL');
     }
 
-    // Use nseCode format — strip ".NS" suffix if present
+    // Try Yahoo Finance first for CMP
     const nseCode = symbol.replace(/\.NS$/i, '');
-    const fundamentals = await getStockFundamentals(nseCode);
+    const yahooSymbol = symbol.endsWith('.NS') ? symbol : `${nseCode}.NS`;
 
-    const quote = {
-      symbol,
-      cmp: fundamentals.cmp ?? 0,
-      change: fundamentals.change ?? 0,
-      changePercent: fundamentals.changePercent ?? 0,
-      dayHigh: 0,
-      dayLow: 0,
-      volume: 0,
-      lastUpdated: fundamentals.lastUpdated,
-    };
+    let quote;
+    try {
+      const yahooQuote = await (await import('../services/yahooFinance.js')).getStockQuote(yahooSymbol);
+      quote = yahooQuote;
+    } catch {
+      // Fallback to Google Finance
+      const fundamentals = await getStockFundamentals(nseCode);
+      quote = {
+        symbol,
+        cmp: fundamentals.cmp ?? 0,
+        change: fundamentals.change ?? 0,
+        changePercent: fundamentals.changePercent ?? 0,
+        dayHigh: 0,
+        dayLow: 0,
+        volume: 0,
+        lastUpdated: fundamentals.lastUpdated,
+      };
+    }
 
     const response: ApiResponse<typeof quote> = {
       success: true,
@@ -81,9 +90,14 @@ router.get('/portfolio', async (req: Request, res: Response, next: NextFunction)
   try {
     const holdings = portfolioStore.getHoldings();
     const nseCodes = holdings.map((h) => h.nseCode);
+    const symbols = holdings.map((h) => h.symbol);
 
-    // Fetch all data from Google Finance (CMP + fundamentals in one scrape)
-    const fundamentalsMap = await getBatchFundamentals(nseCodes);
+    // Fetch CMP from Yahoo Finance (primary source for real-time prices)
+    // Fetch P/E and Earnings from Google Finance (fundamentals)
+    const [quotesMap, fundamentalsMap] = await Promise.all([
+      getBatchQuotes(symbols),
+      getBatchFundamentals(nseCodes),
+    ]);
 
     // Calculate total investment for portfolio weight calculation
     const totalInvestment = holdings.reduce(
@@ -93,9 +107,14 @@ router.get('/portfolio', async (req: Request, res: Response, next: NextFunction)
 
     // Build enriched portfolio stocks
     const portfolioStocks: PortfolioStock[] = holdings.map((holding) => {
+      const yahooQuote = quotesMap.get(holding.symbol);
       const fundamentals = fundamentalsMap.get(holding.nseCode);
 
-      const cmp = fundamentals?.cmp ?? 0;
+      // CMP: prefer Yahoo Finance, fallback to Google Finance
+      const cmp = yahooQuote?.cmp ?? fundamentals?.cmp ?? 0;
+      const dayChange = yahooQuote?.change ?? fundamentals?.change ?? 0;
+      const dayChangePercent = yahooQuote?.changePercent ?? fundamentals?.changePercent ?? 0;
+
       const investment = holding.purchasePrice * holding.quantity;
       const presentValue = cmp * holding.quantity;
       const gainLoss = presentValue - investment;
@@ -112,8 +131,8 @@ router.get('/portfolio', async (req: Request, res: Response, next: NextFunction)
         portfolioWeight,
         peRatio: fundamentals?.peRatio ?? null,
         latestEarnings: fundamentals?.latestEarnings ?? null,
-        dayChange: fundamentals?.change ?? 0,
-        dayChangePercent: fundamentals?.changePercent ?? 0,
+        dayChange,
+        dayChangePercent,
       };
     });
 

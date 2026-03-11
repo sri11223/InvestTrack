@@ -24,6 +24,7 @@ const TABLE_HEADERS = [
   { key: 'presentValue', label: 'Present Value', align: 'right' as const, width: 'w-32' },
   { key: 'gainLoss', label: 'Gain/Loss', align: 'right' as const, width: 'w-36' },
   { key: 'pe', label: 'P/E Ratio', align: 'center' as const, width: 'w-24' },
+  { key: 'earnings', label: 'Latest Earnings', align: 'center' as const, width: 'w-28' },
   { key: 'actions', label: 'Actions', align: 'center' as const, width: 'w-28' },
 ];
 

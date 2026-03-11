@@ -34,3 +34,6 @@ coverage/
 
 # Misc
 *.tsbuildinfo
+
+# Runtime data (seeded on first run)
+backend/data/*.json

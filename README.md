@@ -154,9 +154,10 @@ Visit **http://localhost:3000** in your browser.
 ## Technical Challenges & Solutions
 
 ### 1. Unofficial APIs
-Yahoo Finance and Google Finance don't offer public APIs. We use:
-- **yahoo-finance2** — A well-maintained unofficial library for Yahoo Finance data
-- **cheerio** — HTML scraping of Google Finance pages for P/E ratio and earnings
+Yahoo Finance and Google Finance don't offer public APIs. We use a **dual-source strategy**:
+- **yahoo-finance2** — Primary source for CMP (Current Market Price) and real-time quotes
+- **cheerio** — HTML scraping of Google Finance pages for P/E ratio and earnings (fundamentals)
+- **Fallback chain**: If Yahoo Finance fails for a stock, the system falls back to Google Finance CMP
 
 ### 2. Rate Limiting & Caching
 - Server-side **in-memory caching** (node-cache) with configurable TTL (30s for quotes, 5min for fundamentals)

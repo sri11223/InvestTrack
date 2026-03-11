@@ -147,6 +147,11 @@ export const StockRow = memo(function StockRow({ stock, index, onBuy, onSell, on
         {stock.peRatio !== null ? formatNumber(stock.peRatio, 1) : '—'}
       </td>
 
+      {/* Latest Earnings */}
+      <td className="px-3 py-3 text-center font-mono text-xs text-[var(--text-secondary)]">
+        {stock.latestEarnings ?? '—'}
+      </td>
+
       {/* Actions */}
       <td className="px-3 py-3">
         <div className="flex items-center justify-center gap-1">
