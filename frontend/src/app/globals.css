@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@layer base {
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f5f9;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-hover: #cbd5e1;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+  }
+
+  .dark {
+    --bg-primary: #0a0a0f;
+    --bg-secondary: #111118;
+    --bg-card: #16161f;
+    --bg-card-hover: #1e1e2a;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #475569;
+    --border: #1e293b;
+    --border-hover: #334155;
+    --accent: #3b82f6;
+    --accent-hover: #60a5fa;
+  }
+
+  body {
+    @apply bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  * {
+    @apply border-[var(--border)];
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-[var(--bg-card)] rounded-xl border border-[var(--border)] shadow-sm;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .card-hover {
+    @apply hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)] transition-all duration-200;
+  }
+
+  /* Scrollbar styling */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-[var(--border)] rounded-full;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-[var(--border-hover)];
+  }
+
+  /* Table styling */
+  .table-header {
+    @apply bg-[var(--bg-secondary)] text-[var(--text-secondary)] text-xs font-semibold uppercase tracking-wider;
+  }
+
+  .table-row {
+    @apply border-b border-[var(--border)] hover:bg-[var(--bg-card-hover)] transition-colors duration-150;
+  }
+
+  /* Gain/Loss indicators */
+  .gain-text {
+    @apply text-gain font-medium;
+  }
+
+  .loss-text {
+    @apply text-loss font-medium;
+  }
+
+  .gain-bg {
+    @apply bg-gain-bg;
+  }
+
+  .loss-bg {
+    @apply bg-loss-bg;
+  }
+
+  /* Sector header */
+  .sector-header {
+    @apply bg-[var(--bg-secondary)] px-4 py-3 rounded-lg border border-[var(--border)] cursor-pointer select-none;
+  }
+
+  /* Pulse animation for live data */
+  .live-indicator {
+    @apply inline-block w-2 h-2 rounded-full bg-gain animate-pulse-slow;
+  }
+}
+
+@layer utilities {
+  .text-primary {
+    color: var(--text-primary);
+  }
+  .text-secondary {
+    color: var(--text-secondary);
+  }
+  .text-muted {
+    color: var(--text-muted);
+  }
+}
