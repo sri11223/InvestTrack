@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: investtrack-api
+    runtime: node
+    region: oregon
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8000"
+      - key: CORS_ORIGINS
+        sync: false  # Set manually after Vercel deploy
+      - key: CACHE_TTL_QUOTES
+        value: "30"
+      - key: CACHE_TTL_FUNDAMENTALS
+        value: "300"
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "60000"
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: "100"
