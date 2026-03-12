@@ -8,6 +8,14 @@
 ![Tailwind](https://img.shields.io/badge/TailwindCSS-3.4-38bdf8?logo=tailwindcss)
 ![CI](https://github.com/sri11223/InvestTrack/actions/workflows/ci.yml/badge.svg)
 
+### Live Demo
+
+| | URL |
+|---|---|
+| **Frontend** | [invest-track-beryl.vercel.app](https://invest-track-beryl.vercel.app/) |
+| **Backend API** | [investtrack-ymot.onrender.com](https://investtrack-ymot.onrender.com/api/health) |
+| **API Docs (Swagger)** | [investtrack-ymot.onrender.com/api-docs](https://investtrack-ymot.onrender.com/api-docs) |
+
 ---
 
 ## Table of Contents
@@ -19,10 +27,11 @@
 5. [Getting Started](#getting-started)
 6. [API Reference](#api-reference)
 7. [Environment Variables](#environment-variables)
-8. [Technical Challenges & Solutions](#technical-challenges--solutions)
-9. [Performance Optimizations](#performance-optimizations)
-10. [Scripts](#scripts)
-11. [Folder Structure](#folder-structure)
+8. [Deployment](#deployment)
+9. [Technical Challenges & Solutions](#technical-challenges--solutions)
+10. [Performance Optimizations](#performance-optimizations)
+11. [Scripts](#scripts)
+12. [Folder Structure](#folder-structure)
 
 ---
 
@@ -86,6 +95,8 @@ The dashboard auto-refreshes every 15 seconds, groups stocks by sector with visu
 | Logging     | `winston` (structured logging, file + console transports)     |
 | Persistence | JSON file storage (`backend/data/`)                           |
 | CI/CD       | GitHub Actions (TypeScript check + build on push/PR)          |
+| API Docs    | Swagger UI (`swagger-ui-express` + `swagger-jsdoc`)           |
+| Hosting     | Vercel (frontend) + Render (backend)                          |
 
 ---
 
@@ -234,6 +245,34 @@ Navigate to **http://localhost:3000** in your browser. The dashboard will automa
 
 ---
 
+## Deployment
+
+The application is deployed with a split architecture:
+
+| Service   | Platform | URL |
+|-----------|----------|-----|
+| Frontend  | Vercel   | [invest-track-beryl.vercel.app](https://invest-track-beryl.vercel.app/) |
+| Backend   | Render   | [investtrack-ymot.onrender.com](https://investtrack-ymot.onrender.com/api/health) |
+| API Docs  | Render   | [investtrack-ymot.onrender.com/api-docs](https://investtrack-ymot.onrender.com/api-docs) |
+
+### Swagger API Documentation
+
+Interactive API documentation is available at `/api-docs` on the backend. It provides:
+
+- **Try It Out** — Test any endpoint directly from the browser
+- **Request/Response schemas** — Full OpenAPI 3.0.3 spec for all 18 endpoints
+- **JSON spec** — Available at `/api-docs.json` for code generation or import into Postman
+
+### Deployment Configuration
+
+- **Render**: Configured via `render.yaml` blueprint — auto-builds from `main` branch
+- **Vercel**: Configured via `vercel.json` — auto-deploys `frontend/` directory
+- **CORS**: Backend whitelist includes the Vercel frontend URL via `CORS_ORIGINS` env var
+
+> **Note**: Render free tier spins down after 15 minutes of inactivity. The first request after idle may take 30-50 seconds to cold-start.
+
+---
+
 ## Technical Challenges & Solutions
 
 ### Challenge 1: No Official Financial APIs
@@ -365,7 +404,8 @@ InvestTrack/
 │   │   ├── app.ts                    # Express entry point
 │   │   ├── config/
 │   │   │   ├── cors.ts               # CORS origin whitelist
-│   │   │   └── index.ts              # Environment config loader
+│   │   │   ├── index.ts              # Environment config loader
+│   │   │   └── swagger.ts            # OpenAPI 3.0.3 / Swagger spec
 │   │   ├── middleware/
 │   │   │   ├── errorHandler.ts       # Global error handler + AppError class
 │   │   │   └── rateLimiter.ts        # Rate limiting middleware

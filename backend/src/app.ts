@@ -1,8 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import swaggerUi from 'swagger-ui-express';
 import { config } from './config/index.js';
 import { corsOptions } from './config/cors.js';
+import { swaggerSpec } from './config/swagger.js';
 import { apiRateLimiter } from './middleware/rateLimiter.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { logger } from './utils/logger.js';
@@ -28,6 +30,13 @@ app.use((req, _res, next) => {
   });
   next();
 });
+
+// ─── Swagger API Docs ─────────────────────────────────────────────────────────
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'InvestTrack API Documentation',
+}));
+app.get('/api-docs.json', (_req, res) => res.json(swaggerSpec));
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
 app.use('/api', apiRoutes);
